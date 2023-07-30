@@ -51,8 +51,6 @@ namespace GC
         // and implicit conversions
         inline std::unordered_map<void *, PointerData> nodes;
         inline std::unordered_set<PtrBase *> roots;
-        // for checking if the current construction is root or not
-        inline bool is_root = true;
 
         // returns u - t
         template <typename T, typename U>
@@ -242,8 +240,7 @@ namespace GC
     {
         inline auto registerRoot(PtrBase *root) -> void
         {
-            if (is_root)
-                roots.insert(root);
+            roots.insert(root);
         }
 
         inline auto removeRoot(PtrBase *root) -> void
@@ -353,14 +350,7 @@ namespace GC
     template <typename T> template <typename ...Args>
     auto Ptr<T>::make(Args &&...args) -> Ptr
     {
-        bool old_is_root = detail::is_root;
-        // set to false, so all Ptr() calls inside T() will be treated as non root
-        detail::is_root = false;
-        T *t = new T(std::forward<Args>(args)...);
-        // set back to original value
-        detail::is_root = old_is_root;
-
-        return Ptr(t);
+        return Ptr(new T(std::forward<Args>(args)...));
     }
 
     template <typename T>
